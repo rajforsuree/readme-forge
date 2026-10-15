@@ -1,32 +1,75 @@
-/* ==========================================================================
-   ReadmeForge — app.js
-   A dependency-light README.md generator that runs entirely in the browser.
-   Markdown is rendered with marked + DOMPurify (both vendored locally).
-   ========================================================================== */
 (function () {
   "use strict";
 
-  /* ---------- tiny helpers ---------- */
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
   var FENCE = "```";
-  var esc = function (s) {
+
+  function esc(s) {
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;")
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  };
-  var uid = function () { return "b" + Math.random().toString(36).slice(2, 9); };
-  var slugify = function (s) {
+  }
+  function uid() { return "b" + Math.random().toString(36).slice(2, 9); }
+  function slugify(s) {
     return String(s).toLowerCase().trim()
       .replace(/[^\p{L}\p{N}\s-]/gu, "")
       .replace(/\s+/g, "-");
-  };
-  var shieldEnc = function (s) {
+  }
+  function shieldEnc(s) {
     return encodeURIComponent(String(s == null ? "" : s).replace(/-/g, "--").replace(/ /g, "_"));
-  };
-  var lines = function (arr) {
+  }
+  function lines(arr) {
     return (arr || []).map(function (x) { return String(x).trim(); }).filter(Boolean);
+  }
+
+  var ICONS = {
+    heading: '<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>',
+    text: '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/>',
+    tag: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8Z"/><circle cx="7" cy="7" r="1"/>',
+    listChecks: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    download: '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+    terminal: '<path d="M4 17l6-5-6-5"/><path d="M12 19h8"/>',
+    scale: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="M8 7 4 14h8Z"/><path d="m16 7-4 7h8Z"/>',
+    externalLink: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>',
+    image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
+    layers: '<path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+    folder: '<path d="M3 5a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v2H3Z"/><path d="M3 9v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9"/><path d="M8 13v4"/><path d="M8 15h6"/>',
+    list: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
+    gitPR: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6"/><circle cx="18" cy="18" r="3"/><path d="M18 15V9a3 3 0 0 0-3-3h-3"/><path d="m15 3-3 3 3 3"/>',
+    map: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15"/><path d="M15 6v15"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.4"/><path d="M12 17h.01"/>',
+    award: '<circle cx="12" cy="9" r="5"/><path d="m8.5 13.5-1.5 8 5-3 5 3-1.5-8"/>',
+    heart: '<path d="M12 20s-7-4.3-9.2-8.2A5 5 0 0 1 12 6a5 5 0 0 1 9.2 5.8C19 15.7 12 20 12 20Z"/>',
+    mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+    chart: '<path d="M4 21V11"/><path d="M10 21V4"/><path d="M16 21v-6"/><path d="M22 21V8"/>',
+    minus: '<path d="M5 12h14"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    grip: '<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
+    arrowUp: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>',
+    arrowDown: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+    trash: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/>',
+    plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+    code: '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
+    braces: '<path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/><path d="M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/>',
+    listBullet: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
+    checkSquare: '<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    table: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/>',
+    quote: '<path d="M7 7H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2v3a2 2 0 0 1-2 2"/><path d="M17 7h-2a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2v3a2 2 0 0 1-2 2"/>',
+    details: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m8 10 4 4 4-4"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>'
   };
+
+  function icon(name, cls) {
+    return '<svg' + (cls ? ' class="' + cls + '"' : "") +
+      ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      (ICONS[name] || "") + "</svg>";
+  }
 
   var toastTimer = null;
   function toast(msg) {
@@ -38,9 +81,7 @@
   }
 
   function copyText(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text);
-    }
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
     return new Promise(function (resolve) {
       var ta = document.createElement("textarea");
       ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
@@ -60,7 +101,6 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
   }
 
-  /* ---------- badge + social helpers ---------- */
   function badgeUrl(item, g) {
     var style = item.style || "flat-square";
     var logo = item.logo || "";
@@ -71,20 +111,20 @@
     var pkg = item.pkg || "package";
     var base;
     switch (type) {
-      case "stars":        base = "https://img.shields.io/github/stars/" + owner + "/" + repo; break;
-      case "forks":        base = "https://img.shields.io/github/forks/" + owner + "/" + repo; break;
-      case "issues":       base = "https://img.shields.io/github/issues/" + owner + "/" + repo; break;
-      case "license":      base = "https://img.shields.io/github/license/" + owner + "/" + repo; break;
-      case "last-commit":  base = "https://img.shields.io/github/last-commit/" + owner + "/" + repo; break;
+      case "stars": base = "https://img.shields.io/github/stars/" + owner + "/" + repo; break;
+      case "forks": base = "https://img.shields.io/github/forks/" + owner + "/" + repo; break;
+      case "issues": base = "https://img.shields.io/github/issues/" + owner + "/" + repo; break;
+      case "license": base = "https://img.shields.io/github/license/" + owner + "/" + repo; break;
+      case "last-commit": base = "https://img.shields.io/github/last-commit/" + owner + "/" + repo; break;
       case "contributors": base = "https://img.shields.io/github/contributors/" + owner + "/" + repo; break;
-      case "repo-size":    base = "https://img.shields.io/github/repo-size/" + owner + "/" + repo; break;
-      case "npm-version":  base = "https://img.shields.io/npm/v/" + pkg; break;
-      case "npm-downloads":base = "https://img.shields.io/npm/dm/" + pkg; break;
+      case "repo-size": base = "https://img.shields.io/github/repo-size/" + owner + "/" + repo; break;
+      case "npm-version": base = "https://img.shields.io/npm/v/" + pkg; break;
+      case "npm-downloads": base = "https://img.shields.io/npm/dm/" + pkg; break;
       case "pypi-version": base = "https://img.shields.io/pypi/v/" + pkg; break;
       case "pypi-downloads": base = "https://img.shields.io/pypi/dm/" + pkg; break;
       default:
         base = "https://img.shields.io/badge/" + shieldEnc(item.label || "label") +
-               "-" + shieldEnc(item.message || "message") + "-" + (item.color || "blue");
+          "-" + shieldEnc(item.message || "message") + "-" + (item.color || "blue");
     }
     var q = [];
     if (style) q.push("style=" + style);
@@ -94,21 +134,21 @@
   }
 
   var SOCIALS = {
-    github:       { label: "GitHub",        color: "181717", logo: "github",        url: "https://github.com/{u}" },
-    twitter:      { label: "X",             color: "000000", logo: "x",             url: "https://x.com/{u}" },
-    linkedin:     { label: "LinkedIn",      color: "0A66C2", logo: "linkedin",      url: "https://linkedin.com/in/{u}" },
-    instagram:    { label: "Instagram",     color: "E4405F", logo: "instagram",     url: "https://instagram.com/{u}" },
-    youtube:      { label: "YouTube",       color: "FF0000", logo: "youtube",       url: "https://youtube.com/@{u}" },
-    devto:        { label: "Dev.to",        color: "0A0A0A", logo: "devdotto",      url: "https://dev.to/{u}" },
-    medium:       { label: "Medium",        color: "12100E", logo: "medium",        url: "https://medium.com/@{u}" },
-    hashnode:     { label: "Hashnode",      color: "2962FF", logo: "hashnode",      url: "https://hashnode.com/@{u}" },
-    stackoverflow:{ label: "Stack Overflow",color: "FE7A16", logo: "stackoverflow", url: "https://stackoverflow.com/users/{u}" },
-    reddit:       { label: "Reddit",        color: "FF4500", logo: "reddit",        url: "https://reddit.com/user/{u}" },
-    discord:      { label: "Discord",       color: "5865F2", logo: "discord",       url: "https://discord.gg/{u}" },
-    telegram:     { label: "Telegram",      color: "26A5E4", logo: "telegram",      url: "https://t.me/{u}" },
-    whatsapp:     { label: "WhatsApp",      color: "25D366", logo: "whatsapp",      url: "https://wa.me/{u}" },
-    email:        { label: "Email",         color: "D14836", logo: "gmail",         url: "mailto:{u}" },
-    website:      { label: "Website",       color: "6d5efc", logo: "",              url: "{u}" }
+    github: { label: "GitHub", color: "181717", logo: "github", url: "https://github.com/{u}" },
+    twitter: { label: "X", color: "000000", logo: "x", url: "https://x.com/{u}" },
+    linkedin: { label: "LinkedIn", color: "0A66C2", logo: "linkedin", url: "https://linkedin.com/in/{u}" },
+    instagram: { label: "Instagram", color: "E4405F", logo: "instagram", url: "https://instagram.com/{u}" },
+    youtube: { label: "YouTube", color: "FF0000", logo: "youtube", url: "https://youtube.com/@{u}" },
+    devto: { label: "Dev.to", color: "0A0A0A", logo: "devdotto", url: "https://dev.to/{u}" },
+    medium: { label: "Medium", color: "12100E", logo: "medium", url: "https://medium.com/@{u}" },
+    hashnode: { label: "Hashnode", color: "2962FF", logo: "hashnode", url: "https://hashnode.com/@{u}" },
+    stackoverflow: { label: "Stack Overflow", color: "FE7A16", logo: "stackoverflow", url: "https://stackoverflow.com/users/{u}" },
+    reddit: { label: "Reddit", color: "FF4500", logo: "reddit", url: "https://reddit.com/user/{u}" },
+    discord: { label: "Discord", color: "5865F2", logo: "discord", url: "https://discord.gg/{u}" },
+    telegram: { label: "Telegram", color: "26A5E4", logo: "telegram", url: "https://t.me/{u}" },
+    whatsapp: { label: "WhatsApp", color: "25D366", logo: "whatsapp", url: "https://wa.me/{u}" },
+    email: { label: "Email", color: "D14836", logo: "gmail", url: "mailto:{u}" },
+    website: { label: "Website", color: "4f46e5", logo: "", url: "{u}" }
   };
 
   function socialBadge(item) {
@@ -120,79 +160,73 @@
     var label = item.label || p.label;
     var handle = item.handle || "";
     var link = item.url || (p.url ? p.url.replace("{u}", handle) : "");
-    // With no handle, use the brand colour as the badge message so it renders
-    // as a clean single-word pill (the common profile-README style).
     var msg = handle || (key === "website" ? "example.com" : color);
     var img = "https://img.shields.io/badge/" + shieldEnc(label) + "-" + shieldEnc(msg) + "-" + color +
-              "?style=" + style + (logo ? "&logo=" + logo + "&logoColor=white" : "");
+      "?style=" + style + (logo ? "&logo=" + logo + "&logoColor=white" : "");
     return link ? "[![" + label + "](" + img + ")](" + link + ")" : "![" + label + "](" + img + ")";
   }
 
-  /* ==========================================================================
-     Block registry — every README section is one entry here.
-     Each block: { label, icon, group, defaults(g), fields[], render(data, g) }
-     ========================================================================== */
   var BLOCKS = {
-
     header: {
-      label: "Title & tagline", icon: "📛", group: "Essentials",
-      defaults: function (g) { return { name: g.name || "", tagline: "", logo: "", align: "center", emoji: "" }; },
+      label: "Title and tagline", icon: "heading", group: "Basics",
+      defaults: function (g) { return { name: g.name || "", prefix: "", tagline: "", logo: "", align: "center" }; },
       fields: [
-        { k: "name", label: "Project name", type: "text", ph: "Awesome Project" },
-        { k: "emoji", label: "Greeting emoji (optional)", type: "text", ph: "👋" },
+        { k: "name", label: "Project name", type: "text", ph: "Project name" },
+        { k: "prefix", label: "Title prefix", type: "text", ph: "Hi, I'm" },
         { k: "tagline", label: "Tagline", type: "text", ph: "A one-line description" },
-        { k: "logo", label: "Logo image URL (optional)", type: "text", ph: "https://…/logo.png" },
+        { k: "logo", label: "Logo image URL", type: "text", ph: "https://example.com/logo.png" },
         { k: "align", label: "Alignment", type: "select", opts: ["center", "left"] }
       ],
       render: function (d) {
-        var name = d.name || "Project Name";
-        var emoji = d.emoji ? d.emoji + " " : "";
+        var name = d.name || "Project name";
+        var prefix = d.prefix ? d.prefix + " " : "";
         var out = "";
         if (d.align === "center") {
           if (d.logo) out += '<p align="center"><img src="' + d.logo + '" alt="' + name + ' logo" width="120" /></p>\n\n';
-          out += "<h1 align=\"center\">" + emoji + name + "</h1>";
-          if (d.tagline) out += "\n<p align=\"center\">" + d.tagline + "</p>";
+          out += '<h1 align="center">' + prefix + name + "</h1>";
+          if (d.tagline) out += '\n<p align="center">' + d.tagline + "</p>";
           return out;
         }
         if (d.logo) out += '<img src="' + d.logo + '" alt="' + name + ' logo" width="120" />\n\n';
-        out += "# " + emoji + name;
+        out += "# " + prefix + name;
         if (d.tagline) out += "\n\n" + d.tagline;
         return out;
       }
     },
 
     description: {
-      label: "Description", icon: "📝", group: "Essentials",
+      label: "Description", icon: "text", group: "Basics",
       defaults: function () { return { text: "" }; },
-      fields: [{ k: "text", label: "About this project", type: "textarea", ph: "What does it do, and why should someone care?" }],
+      fields: [{ k: "text", label: "About this project", type: "textarea", ph: "What it does and who it is for" }],
       render: function (d) { return (d.text || "").trim(); }
     },
 
     badges: {
-      label: "Badges", icon: "🏷️", group: "Essentials",
+      label: "Badges", icon: "tag", group: "Basics",
       defaults: function () {
-        return { items: [
-          { type: "stars", label: "", message: "", color: "blue", style: "flat-square", logo: "", logoColor: "", owner: "", repo: "", pkg: "", alt: "stars" },
-          { type: "license", label: "", message: "", color: "blue", style: "flat-square", logo: "", logoColor: "", owner: "", repo: "", pkg: "", alt: "license" }
-        ] };
+        return {
+          items: [
+            { type: "stars", style: "flat-square", owner: "", repo: "", pkg: "", color: "blue", label: "", message: "", logo: "", logoColor: "", alt: "stars" },
+            { type: "license", style: "flat-square", owner: "", repo: "", pkg: "", color: "blue", label: "", message: "", logo: "", logoColor: "", alt: "license" }
+          ]
+        };
       },
       fields: [{ k: "items", label: "Badges", type: "badges" }],
       render: function (d, g) {
         var items = d.items || [];
         if (!items.length) return "";
         return items.map(function (it) {
-          var alt = it.alt || it.label || it.type || "badge";
-          return "![" + alt + "](" + badgeUrl(it, g) + ")";
+          return "![" + (it.alt || it.label || it.type || "badge") + "](" + badgeUrl(it, g) + ")";
         }).join(" ");
       }
     },
 
     features: {
-      label: "Features", icon: "✨", group: "Essentials",
+      label: "Features", icon: "listChecks", group: "Basics",
       defaults: function () { return { heading: "Features", items: ["Feature one", "Feature two", "Feature three"] }; },
       fields: [
         { k: "heading", label: "Heading", type: "text" },
-        { k: "items", label: "Features (one per line)", type: "list", ph: "⚡ Blazing fast" }
+        { k: "items", label: "One per line", type: "list", ph: "Feature" }
       ],
       render: function (d) {
         var list = lines(d.items);
@@ -202,12 +236,12 @@
     },
 
     installation: {
-      label: "Installation", icon: "📦", group: "Essentials",
+      label: "Installation", icon: "download", group: "Basics",
       defaults: function () { return { text: "Install the dependencies:", lang: "bash", code: "npm install" }; },
       fields: [
         { k: "text", label: "Intro text", type: "textarea" },
         { k: "lang", label: "Code language", type: "text", ph: "bash" },
-        { k: "code", label: "Commands / code", type: "textarea", ph: "npm install" }
+        { k: "code", label: "Commands", type: "textarea", ph: "npm install" }
       ],
       render: function (d) {
         var out = "## Installation\n";
@@ -218,8 +252,8 @@
     },
 
     usage: {
-      label: "Usage", icon: "🚀", group: "Essentials",
-      defaults: function () { return { text: "Get started quickly:", lang: "bash", code: "npm start" }; },
+      label: "Usage", icon: "terminal", group: "Basics",
+      defaults: function () { return { text: "Run the project:", lang: "bash", code: "npm start" }; },
       fields: [
         { k: "text", label: "Intro text", type: "textarea" },
         { k: "lang", label: "Code language", type: "text", ph: "bash" },
@@ -234,57 +268,57 @@
     },
 
     license: {
-      label: "License", icon: "⚖️", group: "Essentials",
+      label: "Licence", icon: "scale", group: "Basics",
       defaults: function (g) { return { type: "MIT", author: g.name || "", year: String(new Date().getFullYear()) }; },
       fields: [
         { k: "type", label: "Licence", type: "select", opts: ["MIT", "Apache-2.0", "GPL-3.0", "BSD-3-Clause", "ISC", "Unlicense", "MPL-2.0", "Custom"] },
-        { k: "author", label: "Copyright holder (optional)", type: "text" },
+        { k: "author", label: "Copyright holder", type: "text" },
         { k: "year", label: "Year", type: "text", ph: "2026" }
       ],
       render: function (d) {
         var type = d.type || "MIT";
-        var who = d.author ? " © " + d.year + " " + d.author : "";
+        var who = d.author ? " \u00a9 " + d.year + " " + d.author : "";
         return "## License\n\nReleased under the **" + type + "** License" + who +
-               ". See the [LICENSE](LICENSE) file for more information.";
+          ". See the [LICENSE](LICENSE) file for more information.";
       }
     },
 
     demo: {
-      label: "Demo & links", icon: "🔗", group: "Showcase",
-      defaults: function () { return { text: "", url: "", label: "Live Demo" }; },
+      label: "Demo and links", icon: "externalLink", group: "Content",
+      defaults: function () { return { text: "", url: "", label: "Live demo" }; },
       fields: [
         { k: "text", label: "Intro text", type: "textarea" },
-        { k: "label", label: "Link label", type: "text", ph: "Live Demo" },
+        { k: "label", label: "Link label", type: "text", ph: "Live demo" },
         { k: "url", label: "Link URL", type: "text", ph: "https://example.com" }
       ],
       render: function (d) {
         var out = "## Demo\n";
         if (d.text) out += "\n" + d.text + "\n";
-        if (d.url) out += "\n**[" + (d.label || "Live Demo") + "](" + d.url + ")**";
+        if (d.url) out += "\n**[" + (d.label || "Live demo") + "](" + d.url + ")**";
         return out;
       }
     },
 
     screenshots: {
-      label: "Screenshots", icon: "🖼️", group: "Showcase",
+      label: "Screenshots", icon: "image", group: "Content",
       defaults: function () { return { items: [{ src: "", caption: "" }] }; },
-      fields: [{ k: "items", label: "Images", type: "pairs", fields: ["src", "caption"], ph: ["https://…/shot.png", "Caption"], long: [false, false], addLabel: "Add image" }],
+      fields: [{ k: "items", label: "Images", type: "pairs", fields: ["src", "caption"], ph: ["https://example.com/shot.png", "Caption"], addLabel: "Add image" }],
       render: function (d) {
         var items = (d.items || []).filter(function (i) { return i.src; });
         if (!items.length) return "";
         return "## Screenshots\n\n" + items.map(function (i) {
-          return "![" + (i.caption || "screenshot") + "](" + i.src + ")";
+          return "![" + (i.caption || "Screenshot") + "](" + i.src + ")";
         }).join("\n\n");
       }
     },
 
     techstack: {
-      label: "Tech stack", icon: "🧰", group: "Showcase",
+      label: "Tech stack", icon: "layers", group: "Content",
       defaults: function () { return { heading: "Tech Stack", style: "badges", items: ["JavaScript|javascript|F7DF1E", "Node.js|nodedotjs|5FA04E"] }; },
       fields: [
         { k: "heading", label: "Heading", type: "text" },
         { k: "style", label: "Style", type: "select", opts: ["badges", "list"] },
-        { k: "items", label: "One per line — Name|logo|color (logo & color optional)", type: "list", ph: "React|react|61DAFB" }
+        { k: "items", label: "One per line, as Name|logo|colour", type: "list", ph: "React|react|61DAFB" }
       ],
       render: function (d) {
         var list = lines(d.items);
@@ -295,15 +329,15 @@
           var parts = i.split("|");
           var name = parts[0], logo = parts[1] || "", color = parts[2] || "555555";
           var url = "https://img.shields.io/badge/" + shieldEnc(name) + "-" + color +
-                    "?style=flat-square" + (logo ? "&logo=" + logo + "&logoColor=white" : "");
+            "?style=flat-square" + (logo ? "&logo=" + logo + "&logoColor=white" : "");
           return "![" + name + "](" + url + ")";
         }).join(" ");
       }
     },
 
     structure: {
-      label: "Project structure", icon: "🗂️", group: "Showcase",
-      defaults: function () { return { text: "A quick look at the folder layout:", tree: "├── src/\n├── public/\n├── package.json\n└── README.md" }; },
+      label: "Project structure", icon: "folder", group: "Content",
+      defaults: function () { return { text: "Folder layout:", tree: "\u251c\u2500\u2500 src/\n\u251c\u2500\u2500 public/\n\u251c\u2500\u2500 package.json\n\u2514\u2500\u2500 README.md" }; },
       fields: [
         { k: "text", label: "Intro text", type: "textarea" },
         { k: "tree", label: "Tree", type: "textarea" }
@@ -317,30 +351,30 @@
     },
 
     toc: {
-      label: "Table of contents", icon: "🧭", group: "Showcase",
+      label: "Table of contents", icon: "list", group: "Content",
       defaults: function () { return { heading: "Table of Contents", depth: "3" }; },
       fields: [
         { k: "heading", label: "Heading", type: "text" },
-        { k: "depth", label: "Max heading level", type: "select", opts: ["2", "3", "4"] }
+        { k: "depth", label: "Maximum heading level", type: "select", opts: ["2", "3", "4"] }
       ],
-      render: function () { return ""; } // filled in by compile()
+      render: function () { return ""; }
     },
 
     contributing: {
-      label: "Contributing", icon: "🤝", group: "Community",
+      label: "Contributing", icon: "gitPR", group: "Community",
       defaults: function () {
-        return { text: "Contributions are what make the open-source community amazing. Any contribution you make is **greatly appreciated**.\n\n1. Fork the project\n2. Create your feature branch (`git checkout -b feature/amazing`)\n3. Commit your changes (`git commit -m 'Add amazing feature'`)\n4. Push to the branch (`git push origin feature/amazing`)\n5. Open a Pull Request" };
+        return { text: "Contributions are welcome.\n\n1. Fork the project\n2. Create a branch (`git checkout -b feature/name`)\n3. Commit your changes (`git commit -m 'Add feature'`)\n4. Push the branch (`git push origin feature/name`)\n5. Open a pull request" };
       },
       fields: [{ k: "text", label: "Contributing text", type: "textarea", rows: 8 }],
       render: function (d) { return (d.text || "").trim() ? "## Contributing\n\n" + d.text : ""; }
     },
 
     roadmap: {
-      label: "Roadmap", icon: "🗺️", group: "Community",
+      label: "Roadmap", icon: "map", group: "Community",
       defaults: function () { return { heading: "Roadmap", items: ["[x] Project setup", "[ ] Add more features", "[ ] Write tests"] }; },
       fields: [
         { k: "heading", label: "Heading", type: "text" },
-        { k: "items", label: "Items (use [x] for done)", type: "list", ph: "[ ] Upcoming feature" }
+        { k: "items", label: "One per line, use [x] for done", type: "list", ph: "[ ] Upcoming item" }
       ],
       render: function (d) {
         var list = lines(d.items);
@@ -352,7 +386,7 @@
     },
 
     faq: {
-      label: "FAQ", icon: "❓", group: "Community",
+      label: "FAQ", icon: "help", group: "Community",
       defaults: function () { return { heading: "FAQ", items: [{ q: "How do I install it?", a: "Run the install command above." }] }; },
       fields: [
         { k: "heading", label: "Heading", type: "text" },
@@ -368,11 +402,11 @@
     },
 
     acknowledgements: {
-      label: "Acknowledgements", icon: "🙏", group: "Community",
-      defaults: function () { return { heading: "Acknowledgements", items: ["[Shields.io](https://shields.io) for the badges", "[Choose an Open Source License](https://choosealicense.com)"] }; },
+      label: "Acknowledgements", icon: "award", group: "Community",
+      defaults: function () { return { heading: "Acknowledgements", items: ["[Shields.io](https://shields.io) for the badge service"] }; },
       fields: [
         { k: "heading", label: "Heading", type: "text" },
-        { k: "items", label: "Credits (one per line)", type: "list" }
+        { k: "items", label: "Credits, one per line", type: "list" }
       ],
       render: function (d) {
         var list = lines(d.items);
@@ -382,35 +416,36 @@
     },
 
     support: {
-      label: "Support / star", icon: "⭐", group: "Community",
-      defaults: function () {
-        return { text: "If this project helped you, please consider giving it a ⭐ — it really helps!\n\n[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/)" };
-      },
-      fields: [{ k: "text", label: "Support text", type: "textarea", rows: 6 }],
+      label: "Support", icon: "heart", group: "Community",
+      defaults: function () { return { text: "If this project helped you, consider starring the repository." }; },
+      fields: [{ k: "text", label: "Support text", type: "textarea", rows: 5 }],
       render: function (d) { return (d.text || "").trim() ? "## Support\n\n" + d.text : ""; }
     },
 
     contact: {
-      label: "Social links", icon: "📬", group: "Community",
+      label: "Social links", icon: "mail", group: "Community",
       defaults: function (g) {
-        return { heading: "Connect with me", items: [{ platform: "github", handle: g.owner || "", url: "" }, { platform: "linkedin", handle: "", url: "" }] };
+        return {
+          heading: "Connect",
+          items: [{ platform: "github", handle: g.owner || "", url: "" }, { platform: "linkedin", handle: "", url: "" }]
+        };
       },
       fields: [
         { k: "heading", label: "Heading", type: "text" },
-        { k: "items", label: "Links", type: "pairs", fields: ["platform", "handle"], ph: ["platform", "username"], select: [Object.keys(SOCIALS)], addLabel: "Add link", long: [false, false] }
+        { k: "items", label: "Links", type: "pairs", fields: ["platform", "handle"], ph: ["platform", "username"], select: [Object.keys(SOCIALS)], addLabel: "Add link" }
       ],
       render: function (d) {
         var items = (d.items || []).filter(function (i) { return i.platform; });
         if (!items.length) return "";
-        return "## " + (d.heading || "Connect with me") + "\n\n" + items.map(socialBadge).join("\n");
+        return "## " + (d.heading || "Connect") + "\n\n" + items.map(socialBadge).join("\n");
       }
     },
 
     stats: {
-      label: "GitHub stats cards", icon: "📊", group: "Profile",
+      label: "GitHub stats", icon: "chart", group: "Profile",
       defaults: function (g) { return { owner: g.owner || "", theme: "radical", show: ["stats", "langs", "streak", "trophies", "activity"] }; },
       fields: [
-        { k: "owner", label: "GitHub username", type: "text", ph: "octocat" },
+        { k: "owner", label: "GitHub username", type: "text", ph: "username" },
         { k: "theme", label: "Theme", type: "select", opts: ["radical", "dark", "tokyonight", "dracula", "gruvbox", "merko", "onedark", "synthwave", "cobalt", "vision-friendly-dark"] },
         { k: "show", label: "Cards to include", type: "checks", opts: [["stats", "Stats"], ["langs", "Top languages"], ["streak", "Streak"], ["trophies", "Trophies"], ["activity", "Activity graph"]] }
       ],
@@ -430,41 +465,39 @@
     },
 
     divider: {
-      label: "Divider", icon: "➖", group: "More",
+      label: "Divider", icon: "minus", group: "More",
       defaults: function () { return {}; },
       fields: [],
       render: function () { return "---"; }
     },
 
     custom: {
-      label: "Custom Markdown", icon: "✍️", group: "More",
+      label: "Custom Markdown", icon: "edit", group: "More",
       defaults: function () { return { text: "" }; },
-      fields: [{ k: "text", label: "Your Markdown", type: "textarea", rows: 10, ph: "Anything GitHub-flavoured Markdown…" }],
+      fields: [{ k: "text", label: "Markdown", type: "textarea", rows: 10, ph: "GitHub-flavoured Markdown" }],
       render: function (d) { return (d.text || "").trim(); }
     }
   };
 
-  var GROUPS = ["Essentials", "Showcase", "Community", "Profile", "More"];
+  var GROUPS = ["Basics", "Content", "Community", "Profile", "More"];
 
-  /* ==========================================================================
-     Templates
-     ========================================================================== */
   function blk(type, data) { return { id: uid(), type: type, data: data }; }
 
   var TEMPLATES = {
     starter: {
-      label: "Starter project", desc: "A clean, complete project README to get going fast.",
+      label: "Starter project",
+      desc: "A complete project README to get going quickly.",
       build: function (g) {
         var repo = g.repo || "my-project";
         return [
-          blk("header", { name: g.name || "My Project", emoji: "✨", tagline: "A short, punchy one-line description of what this does.", logo: "", align: "center" }),
+          blk("header", { name: g.name || "My Project", prefix: "", tagline: "A short description of what this project does.", logo: "", align: "center" }),
           blk("badges", { items: [
             { type: "stars", alt: "stars", style: "flat-square", owner: g.owner || "", repo: repo },
             { type: "license", alt: "license", style: "flat-square", owner: g.owner || "", repo: repo },
             { type: "last-commit", alt: "last commit", style: "flat-square", owner: g.owner || "", repo: repo }
           ] }),
-          blk("description", { text: "Explain the problem this project solves and who it is for. Keep it friendly and concrete — a visitor should understand the value in ten seconds." }),
-          blk("features", { heading: "Features", items: ["⚡ Fast and lightweight", "🧩 Easy to extend", "📱 Responsive by default", "🔒 Secure and private"] }),
+          blk("description", { text: "Describe the problem this project solves and who it is for." }),
+          blk("features", { heading: "Features", items: ["Fast and lightweight", "Simple configuration", "Works offline"] }),
           blk("installation", { text: "Clone the repository and install dependencies:", lang: "bash", code: "git clone https://github.com/" + (g.owner || "user") + "/" + repo + ".git\ncd " + repo + "\nnpm install" }),
           blk("usage", { text: "Run the project locally:", lang: "bash", code: "npm start" }),
           blk("license", { type: "MIT", author: g.name || "", year: String(new Date().getFullYear()) })
@@ -472,10 +505,11 @@
       }
     },
     minimal: {
-      label: "Minimal", desc: "Just the essentials — name, description, install and licence.",
+      label: "Minimal",
+      desc: "Name, description, install, usage and licence.",
       build: function (g) {
         return [
-          blk("header", { name: g.name || "My Project", emoji: "", tagline: "A short description.", logo: "", align: "center" }),
+          blk("header", { name: g.name || "My Project", prefix: "", tagline: "A short description.", logo: "", align: "center" }),
           blk("description", { text: "A paragraph about your project." }),
           blk("installation", { text: "", lang: "bash", code: "npm install" }),
           blk("usage", { text: "", lang: "bash", code: "npm start" }),
@@ -484,33 +518,35 @@
       }
     },
     library: {
-      label: "Library / package", desc: "For npm / PyPI packages with badges, usage and FAQ.",
+      label: "Library or package",
+      desc: "For npm and PyPI packages, with badges and an FAQ.",
       build: function (g) {
         var pkg = g.repo || "my-package";
         return [
-          blk("header", { name: g.name || "my-package", emoji: "📦", tagline: "A tiny, focused library that does one thing well.", logo: "", align: "center" }),
+          blk("header", { name: g.name || pkg, prefix: "", tagline: "A small library that does one thing well.", logo: "", align: "center" }),
           blk("badges", { items: [
             { type: "npm-version", pkg: pkg, alt: "npm version", style: "flat-square" },
             { type: "npm-downloads", pkg: pkg, alt: "npm downloads", style: "flat-square" },
             { type: "license", owner: g.owner || "", repo: pkg, alt: "license", style: "flat-square" }
           ] }),
-          blk("description", { text: "Describe the library, its API surface and when to use it." }),
+          blk("description", { text: "Describe the library, its API and when to use it." }),
           blk("installation", { text: "Install from npm:", lang: "bash", code: "npm install " + pkg }),
           blk("usage", { text: "Import and use it:", lang: "javascript", code: "import { thing } from \"" + pkg + "\";\n\nthing();" }),
           blk("techstack", { heading: "Built with", style: "badges", items: ["TypeScript|typescript|3178C6", "Node.js|nodedotjs|5FA04E"] }),
-          blk("faq", { heading: "FAQ", items: [{ q: "Does it work in the browser?", a: "Yes — it ships as ESM and CJS." }] }),
-          blk("contributing", { text: "Pull requests are welcome! Please open an issue first to discuss what you would like to change." }),
+          blk("faq", { heading: "FAQ", items: [{ q: "Does it work in the browser?", a: "Yes, it ships as ESM and CJS." }] }),
+          blk("contributing", { text: "Pull requests are welcome. Please open an issue first to discuss the change." }),
           blk("license", { type: "MIT", author: g.name || "", year: String(new Date().getFullYear()) })
         ];
       }
     },
     api: {
-      label: "API / backend", desc: "Endpoints, auth, request/response examples.",
+      label: "API or backend",
+      desc: "Endpoints, authentication and request examples.",
       build: function (g) {
         return [
-          blk("header", { name: g.name || "My API", emoji: "🛠️", tagline: "A fast, RESTful API for your application.", logo: "", align: "center" }),
+          blk("header", { name: g.name || "My API", prefix: "", tagline: "A REST API for your application.", logo: "", align: "center" }),
           blk("badges", { items: [{ type: "license", owner: g.owner || "", repo: g.repo || "", alt: "license", style: "flat-square" }] }),
-          blk("description", { text: "Describe the API, its base URL and authentication model." }),
+          blk("description", { text: "Describe the API, its base URL and its authentication model." }),
           blk("installation", { text: "Install and run the server:", lang: "bash", code: "npm install\nnpm run dev" }),
           blk("usage", { text: "Make a request:", lang: "bash", code: "curl -X GET http://localhost:3000/api/items \\\n  -H \"Authorization: Bearer <token>\"" }),
           blk("custom", { text: "## Endpoints\n\n| Method | Endpoint | Description |\n| --- | --- | --- |\n| GET | `/api/items` | List all items |\n| POST | `/api/items` | Create an item |\n| GET | `/api/items/:id` | Get one item |\n| DELETE | `/api/items/:id` | Delete an item |" }),
@@ -519,35 +555,34 @@
       }
     },
     profile: {
-      label: "GitHub profile README", desc: "For your username repo — greeting, stats and socials.",
+      label: "GitHub profile",
+      desc: "For your username repository: header, stats and social links.",
       build: function (g) {
         return [
-          blk("header", { name: g.name || "Your Name", emoji: "👋", tagline: "Full-stack developer · building things on the web.", logo: "", align: "center" }),
-          blk("description", { text: "Hi! I'm a developer who loves building fast, useful products. I work mostly with JavaScript, TypeScript and Python, and I'm always learning something new.\n\n- 🔭 Currently working on **my next side project**\n- 🌱 Learning **system design**\n- 💬 Ask me about **web development**\n- ⚡ Fun fact: I debug faster with coffee ☕" }),
-          blk("stats", { owner: g.owner || "your-username", theme: "radical", show: ["stats", "langs", "streak", "trophies", "activity"] }),
-          blk("contact", { heading: "Connect with me", items: [{ platform: "github", handle: g.owner || "", url: "" }, { platform: "linkedin", handle: "", url: "" }, { platform: "twitter", handle: "", url: "" }, { platform: "email", handle: "", url: "" }] }),
-          blk("support", { text: "⭐ From [Your Name](https://github.com/" + (g.owner || "") + ")" })
+          blk("header", { name: g.name || "Your Name", prefix: "Hi, I'm", tagline: "Software developer.", logo: "", align: "center" }),
+          blk("description", { text: "I build web applications and enjoy working across the stack. Most of my work is in JavaScript, TypeScript and Python.\n\n- Currently working on a side project\n- Learning system design\n- Open to collaboration on developer tools" }),
+          blk("stats", { owner: g.owner || "username", theme: "radical", show: ["stats", "langs", "streak", "trophies", "activity"] }),
+          blk("contact", { heading: "Connect", items: [{ platform: "github", handle: g.owner || "", url: "" }, { platform: "linkedin", handle: "", url: "" }, { platform: "twitter", handle: "", url: "" }, { platform: "email", handle: "", url: "" }] }),
+          blk("support", { text: "If you find my work useful, consider following me on GitHub." })
         ];
       }
     },
     awesome: {
-      label: "Awesome list", desc: "A curated list with a table of contents and sections.",
+      label: "Awesome list",
+      desc: "A curated list with a table of contents and sections.",
       build: function (g) {
         return [
-          blk("header", { name: g.name || "Awesome List", emoji: "🌟", tagline: "A curated list of awesome things.", logo: "", align: "center" }),
+          blk("header", { name: g.name || "Awesome List", prefix: "", tagline: "A curated list of useful resources.", logo: "", align: "center" }),
           blk("toc", { heading: "Contents", depth: "2" }),
-          blk("custom", { text: "## Getting Started\n\n- [Resource one](https://example.com) — why it is useful\n- [Resource two](https://example.com) — why it is useful" }),
-          blk("custom", { text: "## Tools\n\n- [Tool one](https://example.com) — what it does\n- [Tool two](https://example.com) — what it does" }),
-          blk("contributing", { text: "Your contributions are always welcome! Please read the contribution guidelines first." }),
+          blk("custom", { text: "## Getting Started\n\n- [Resource one](https://example.com) - why it is useful\n- [Resource two](https://example.com) - why it is useful" }),
+          blk("custom", { text: "## Tools\n\n- [Tool one](https://example.com) - what it does\n- [Tool two](https://example.com) - what it does" }),
+          blk("contributing", { text: "Contributions are welcome. Please read the contribution guidelines first." }),
           blk("license", { type: "MIT", author: g.name || "", year: String(new Date().getFullYear()) })
         ];
       }
     }
   };
 
-  /* ==========================================================================
-     State
-     ========================================================================== */
   var STORE_KEY = "readmeforge.v1";
   var state = {
     mode: "builder",
@@ -564,7 +599,7 @@
         blocks: state.blocks,
         globals: state.globals
       }));
-    } catch (e) { /* storage may be full or blocked */ }
+    } catch (e) {}
   }
 
   function load() {
@@ -581,9 +616,6 @@
     } catch (e) { return false; }
   }
 
-  /* ==========================================================================
-     Compile blocks -> Markdown
-     ========================================================================== */
   function renderBlock(b, g) {
     var def = BLOCKS[b.type];
     if (!def) return "";
@@ -614,17 +646,14 @@
   }
 
   function compile(blocks, g) {
-    var nonToc = [];
-    blocks.forEach(function (b) { if (b.type !== "toc") nonToc.push(renderBlock(b, g)); });
-    var baseMd = nonToc.filter(Boolean).join("\n\n");
+    var base = [];
+    blocks.forEach(function (b) { if (b.type !== "toc") base.push(renderBlock(b, g)); });
+    var baseMd = base.filter(Boolean).join("\n\n");
 
     var parts = [];
     blocks.forEach(function (b) {
-      if (b.type === "toc") {
-        parts.push(buildToc(baseMd, b.data.heading, parseInt(b.data.depth, 10) || 3));
-      } else {
-        parts.push(renderBlock(b, g));
-      }
+      if (b.type === "toc") parts.push(buildToc(baseMd, b.data.heading, parseInt(b.data.depth, 10) || 3));
+      else parts.push(renderBlock(b, g));
     });
     return parts.filter(Boolean).join("\n\n").trim() + "\n";
   }
@@ -634,16 +663,11 @@
     return compile(state.blocks, state.globals);
   }
 
-  /* ==========================================================================
-     Form rendering
-     ========================================================================== */
   function fieldHTML(b, f) {
     var v = (b.data || {})[f.k];
     var id = "f_" + b.id + "_" + f.k;
     var h = '<div class="field">';
-    if (f.type !== "checks" && f.type !== "badges") {
-      h += '<label for="' + id + '">' + esc(f.label) + "</label>";
-    }
+    if (f.type !== "checks" && f.type !== "badges") h += '<label for="' + id + '">' + esc(f.label) + "</label>";
 
     if (f.type === "text") {
       h += '<input type="text" id="' + id + '" data-key="' + f.k + '" value="' + esc(v || "") + '" placeholder="' + esc(f.ph || "") + '" autocomplete="off" />';
@@ -658,8 +682,8 @@
     } else if (f.type === "checks") {
       h += '<div class="subhead">' + esc(f.label) + "</div>";
       h += (f.opts || []).map(function (o) {
-        var checked = (v || []).indexOf(o[0]) > -1 ? " checked" : "";
-        return '<label class="check" style="margin-bottom:6px"><input type="checkbox" data-key="' + f.k + '" data-check="' + esc(o[0]) + '"' + checked + " /> " + esc(o[1]) + "</label>";
+        return '<label class="check" style="margin-bottom:6px"><input type="checkbox" data-key="' + f.k + '" data-check="' + esc(o[0]) + '"' +
+          ((v || []).indexOf(o[0]) > -1 ? " checked" : "") + " /> " + esc(o[1]) + "</label>";
       }).join("");
     } else if (f.type === "pairs") {
       var arr = v || [];
@@ -679,10 +703,10 @@
             h += '<input class="grow" type="text" data-key="' + f.k + '" data-idx="' + i + '" data-sub="' + sub + '" value="' + esc(val) + '" placeholder="' + esc(ph) + '" autocomplete="off" />';
           }
         });
-        h += '<button class="btn btn-ghost btn-icon btn-danger" type="button" data-act="pair-del" data-key="' + f.k + '" data-idx="' + i + '" title="Remove">✕</button>';
+        h += '<button class="btn btn-ghost btn-icon btn-danger" type="button" data-act="pair-del" data-key="' + f.k + '" data-idx="' + i + '" title="Remove">' + icon("x") + "</button>";
         h += "</div>";
       });
-      h += '<button class="btn btn-sm" type="button" data-act="pair-add" data-key="' + f.k + '">+ ' + esc(f.addLabel || "Add row") + "</button>";
+      h += '<button class="btn btn-sm" type="button" data-act="pair-add" data-key="' + f.k + '">' + icon("plus") + esc(f.addLabel || "Add row") + "</button>";
     } else if (f.type === "badges") {
       var items = v || [];
       h += '<div class="subhead">' + esc(f.label) + "</div>";
@@ -690,27 +714,28 @@
         var t = it.type || "custom";
         var isRepo = ["stars", "forks", "issues", "license", "last-commit", "contributors", "repo-size"].indexOf(t) > -1;
         var isPkg = ["npm-version", "npm-downloads", "pypi-version", "pypi-downloads"].indexOf(t) > -1;
-        var sel = function (k, opts, cls) {
+        function sel(k, opts, cls) {
           return '<select data-key="' + f.k + '" data-idx="' + i + '" data-sub="' + k + '"' + (cls ? ' class="' + cls + '"' : "") + ">" +
             opts.map(function (o) {
               var val = o[0], lab = o[1] || o[0];
               return '<option value="' + esc(val) + '"' + (String(it[k]) === val ? " selected" : "") + ">" + esc(lab) + "</option>";
             }).join("") + "</select>";
-        };
-        var txt = function (k, ph, cls) {
-          return '<input type="text" data-key="' + f.k + '" data-idx="' + i + '" data-sub="' + k + '" value="' + esc(it[k] || "") + '" placeholder="' + esc(ph) + '" autocomplete="off"' + (cls ? ' class="' + cls + '"' : "") + " />";
-        };
+        }
+        function txt(k, ph, cls) {
+          return '<input type="text" data-key="' + f.k + '" data-idx="' + i + '" data-sub="' + k + '" value="' + esc(it[k] || "") +
+            '" placeholder="' + esc(ph) + '" autocomplete="off"' + (cls ? ' class="' + cls + '"' : "") + " />";
+        }
         h += '<div class="badge-row">';
         h += '<div class="pair">' + sel("type", [
           ["custom", "Custom label"], ["stars", "GitHub stars"], ["forks", "GitHub forks"], ["issues", "Open issues"],
           ["license", "Licence"], ["last-commit", "Last commit"], ["contributors", "Contributors"], ["repo-size", "Repo size"],
           ["npm-version", "npm version"], ["npm-downloads", "npm downloads"], ["pypi-version", "PyPI version"], ["pypi-downloads", "PyPI downloads"]
         ], "grow") + sel("style", [["flat-square", "flat-square"], ["flat", "flat"], ["plastic", "plastic"], ["for-the-badge", "for-the-badge"], ["social", "social"]]) +
-          '<button class="btn btn-ghost btn-icon btn-danger" type="button" data-act="pair-del" data-key="' + f.k + '" data-idx="' + i + '" title="Remove">✕</button></div>';
+          '<button class="btn btn-ghost btn-icon btn-danger" type="button" data-act="pair-del" data-key="' + f.k + '" data-idx="' + i + '" title="Remove">' + icon("x") + "</button></div>";
         if (t === "custom") {
           h += '<div class="pair">' + txt("label", "label", "grow") + txt("message", "message", "grow") +
-            '<input type="color" data-key="' + f.k + '" data-idx="' + i + '" data-sub="color" value="' + esc(it.color || "#6d5efc") + '" title="Colour" />' + "</div>";
-          h += '<div class="pair">' + txt("logo", "logo (e.g. react)", "grow") + txt("logoColor", "logo colour", "grow") + "</div>";
+            '<input type="color" data-key="' + f.k + '" data-idx="' + i + '" data-sub="color" value="' + esc(it.color || "#4f46e5") + '" title="Colour" /></div>';
+          h += '<div class="pair">' + txt("logo", "logo, e.g. react", "grow") + txt("logoColor", "logo colour", "grow") + "</div>";
         } else if (isRepo) {
           h += '<div class="pair">' + txt("owner", "owner", "grow") + txt("repo", "repo", "grow") + "</div>";
         } else if (isPkg) {
@@ -718,7 +743,7 @@
         }
         h += "</div>";
       });
-      h += '<button class="btn btn-sm" type="button" data-act="pair-add" data-key="' + f.k + '">+ Add badge</button>';
+      h += '<button class="btn btn-sm" type="button" data-act="pair-add" data-key="' + f.k + '">' + icon("plus") + "Add badge</button>";
     }
     h += "</div>";
     return h;
@@ -729,28 +754,28 @@
     var fields = def.fields || [];
     var body = fields.length
       ? fields.map(function (f) { return fieldHTML(b, f); }).join("")
-      : '<p style="margin:0;color:var(--muted);font-size:13px">No options — just drop it in.</p>';
+      : '<p style="margin:0;color:var(--muted);font-size:13px">No options for this section.</p>';
     return '<div class="block" data-id="' + b.id + '">' +
       '<div class="block-head">' +
-        '<span class="drag" aria-hidden="true">⠿</span>' +
-        '<span class="ico">' + def.icon + "</span>" +
-        '<span class="name">' + esc(def.label) + "</span>" +
-        '<span class="spacer"></span>' +
-        '<div class="block-actions">' +
-          '<button class="btn btn-ghost btn-icon btn-sm" type="button" data-act="up" title="Move up">↑</button>' +
-          '<button class="btn btn-ghost btn-icon btn-sm" type="button" data-act="down" title="Move down">↓</button>' +
-          '<button class="btn btn-ghost btn-icon btn-sm" type="button" data-act="dup" title="Duplicate">⧉</button>' +
-          '<button class="btn btn-ghost btn-icon btn-sm btn-danger" type="button" data-act="del" title="Delete">✕</button>' +
-        "</div>" +
+      icon("grip", "grip") +
+      icon(def.icon, "ico") +
+      '<span class="name">' + esc(def.label) + "</span>" +
+      '<span class="spacer"></span>' +
+      '<div class="block-actions">' +
+      '<button class="btn btn-ghost btn-icon btn-sm" type="button" data-act="up" title="Move up">' + icon("arrowUp") + "</button>" +
+      '<button class="btn btn-ghost btn-icon btn-sm" type="button" data-act="down" title="Move down">' + icon("arrowDown") + "</button>" +
+      '<button class="btn btn-ghost btn-icon btn-sm" type="button" data-act="dup" title="Duplicate">' + icon("copy") + "</button>" +
+      '<button class="btn btn-ghost btn-icon btn-sm btn-danger" type="button" data-act="del" title="Delete">' + icon("trash") + "</button>" +
+      "</div>" +
       "</div>" +
       '<div class="block-body">' + body + "</div>" +
-    "</div>";
+      "</div>";
   }
 
   function renderBlocks() {
     var wrap = $("#blocks");
     if (!state.blocks.length) {
-      wrap.innerHTML = '<div class="blocks-empty"><strong>Your README is empty</strong>Add a section from the Library, or pick a template to get started.</div>';
+      wrap.innerHTML = '<div class="blocks-empty"><strong>No sections yet</strong>Add a section from the list, or start from a template.</div>';
     } else {
       wrap.innerHTML = state.blocks.map(blockHTML).join("");
     }
@@ -765,25 +790,22 @@
       if (!entries.length) return;
       html += '<div class="lib-section"><h3>' + gr + "</h3>";
       entries.forEach(function (k) {
-        html += '<button class="lib-item" type="button" data-add="' + k + '"><span class="ico">' + BLOCKS[k].icon + "</span>" +
-          esc(BLOCKS[k].label) + '<span class="plus">+</span></button>';
+        html += '<button class="lib-item" type="button" data-add="' + k + '">' + icon(BLOCKS[k].icon) +
+          esc(BLOCKS[k].label) + icon("plus", "plus") + "</button>";
       });
       html += "</div>";
     });
     wrap.innerHTML = html;
-    $("#libCount").textContent = Object.keys(BLOCKS).length + " blocks";
+    $("#libCount").textContent = Object.keys(BLOCKS).length + " sections";
   }
 
   function updateCounts() {
     var n = state.blocks.length;
     $("#editorCount").textContent = state.mode === "builder"
-      ? (n + (n === 1 ? " block" : " blocks"))
-      : (mdInput.value.length + " chars");
+      ? (n + (n === 1 ? " section" : " sections"))
+      : (mdInput.value.length + " characters");
   }
 
-  /* ==========================================================================
-     Preview
-     ========================================================================== */
   function renderPreview() {
     var md = currentMarkdown();
     var html = "";
@@ -799,13 +821,10 @@
     }
     previewEl.innerHTML = html && html.trim()
       ? html
-      : '<p style="color:var(--muted)">Your live preview will appear here as you build. 🚀</p>';
+      : '<p style="color:var(--muted)">The preview appears here as you add sections.</p>';
     updateCounts();
   }
 
-  /* ==========================================================================
-     Block operations
-     ========================================================================== */
   function addBlock(type, data) {
     var def = BLOCKS[type];
     if (!def) return;
@@ -813,7 +832,7 @@
     state.blocks.push(b);
     renderBlocks(); renderPreview(); save();
     var el = $('.block[data-id="' + b.id + '"]');
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function findIndex(id) {
@@ -846,13 +865,19 @@
     renderBlocks(); renderPreview(); save();
   }
 
-  /* ==========================================================================
-     Editor events
-     ========================================================================== */
+  function newPairRow(type, key) {
+    if (key === "items" && type === "badges") {
+      return { type: "custom", label: "", message: "", color: "#4f46e5", style: "flat-square", logo: "", logoColor: "", owner: "", repo: "", pkg: "", alt: "" };
+    }
+    if (key === "items" && type === "contact") return { platform: "github", handle: "", url: "" };
+    if (key === "items" && type === "faq") return { q: "", a: "" };
+    if (key === "items" && type === "screenshots") return { src: "", caption: "" };
+    return {};
+  }
+
   function bindEditor() {
     var blocksWrap = $("#blocks");
 
-    // structural buttons (up/down/dup/del) + add/remove rows
     blocksWrap.addEventListener("click", function (e) {
       var btn = e.target.closest("[data-act]");
       if (!btn) return;
@@ -871,29 +896,15 @@
         var b = state.blocks[findIndex(id)];
         if (!b) return;
         if (!Array.isArray(b.data[key])) b.data[key] = [];
-        if (act === "pair-add") {
-          if (key === "items" && b.type === "badges") {
-            b.data[key].push({ type: "custom", label: "", message: "", color: "#6d5efc", style: "flat-square", logo: "", logoColor: "", owner: "", repo: "", pkg: "", alt: "" });
-          } else if (key === "items" && b.type === "contact") {
-            b.data[key].push({ platform: "github", handle: "", url: "" });
-          } else if (key === "items" && b.type === "faq") {
-            b.data[key].push({ q: "", a: "" });
-          } else if (key === "items" && b.type === "screenshots") {
-            b.data[key].push({ src: "", caption: "" });
-          } else {
-            b.data[key].push({});
-          }
-        } else {
-          b.data[key].splice(idx, 1);
-        }
+        if (act === "pair-add") b.data[key].push(newPairRow(b.type, key));
+        else b.data[key].splice(idx, 1);
         renderBlocks(); renderPreview(); save();
       }
     });
 
-    // field input
     function onEdit(e) {
       var el = e.target;
-      if (!el || !el.matches("[data-key]")) return;
+      if (!el || !el.matches || !el.matches("[data-key]")) return;
       var blockEl = el.closest(".block");
       if (!blockEl) return;
       var b = state.blocks[findIndex(blockEl.getAttribute("data-id"))];
@@ -920,9 +931,7 @@
       }
       renderPreview(); save();
 
-      // badge "type" select changes the visible fields — re-render that block
       if (el.tagName === "SELECT" && sub === "type") {
-        var bid = b.id;
         var tmp = document.createElement("div");
         tmp.innerHTML = blockHTML(b);
         blockEl.parentNode.replaceChild(tmp.firstChild, blockEl);
@@ -931,7 +940,6 @@
     blocksWrap.addEventListener("input", onEdit);
     blocksWrap.addEventListener("change", onEdit);
 
-    // drag to reorder (only when grabbing the header)
     var dragId = null;
     blocksWrap.addEventListener("mousedown", function (e) {
       var head = e.target.closest(".block-head");
@@ -963,17 +971,14 @@
       e.preventDefault();
       var from = findIndex(dragId), to = findIndex(blk.getAttribute("data-id"));
       if (from < 0 || to < 0 || from === to) return;
-      var moved = state.blocks.splice(from, 1)[0];
-      state.blocks.splice(to, 0, moved);
+      state.blocks.splice(to, 0, state.blocks.splice(from, 1)[0]);
       renderBlocks(); renderPreview(); save();
     });
   }
 
-  /* ---------- globals fields ---------- */
   function bindGlobals() {
     ["gName", "gOwner", "gRepo"].forEach(function (id) {
       var el = document.getElementById(id);
-      el.value = state.globals[id === "gName" ? "name" : id === "gOwner" ? "owner" : "repo"] || "";
       el.addEventListener("input", function () {
         state.globals.name = $("#gName").value;
         state.globals.owner = $("#gOwner").value;
@@ -983,38 +988,35 @@
     });
   }
 
-  /* ==========================================================================
-     Markdown mode + toolbar
-     ========================================================================== */
   var MD_TOOLS = [
-    { t: "H1", b: "# ", a: "", ph: "Heading", title: "Heading 1" },
-    { t: "H2", b: "## ", a: "", ph: "Heading", title: "Heading 2" },
-    { t: "H3", b: "### ", a: "", ph: "Heading", title: "Heading 3" },
-    { t: "B", b: "**", a: "**", ph: "bold", title: "Bold" },
-    { t: "I", b: "_", a: "_", ph: "italic", title: "Italic" },
-    { t: "S", b: "~~", a: "~~", ph: "strike", title: "Strikethrough" },
-    { t: "🔗", b: "[", a: "](https://)", ph: "link text", title: "Link" },
-    { t: "🖼", b: "![", a: "](https://)", ph: "alt text", title: "Image" },
-    { t: "`", b: "`", a: "`", ph: "code", title: "Inline code" },
-    { t: "{ }", b: FENCE + "\n", a: "\n" + FENCE, ph: "code", title: "Code block" },
-    { t: "•", b: "- ", a: "", ph: "item", title: "Bullet list" },
-    { t: "1.", b: "1. ", a: "", ph: "item", title: "Numbered list" },
-    { t: "☑", b: "- [ ] ", a: "", ph: "task", title: "Task list" },
-    { t: "▦", b: "\n| Column | Column |\n| --- | --- |\n| Cell | Cell |\n", a: "", ph: "", title: "Table" },
-    { t: "❝", b: "> ", a: "", ph: "quote", title: "Blockquote" },
-    { t: "▾", b: "<details>\n<summary>", a: "</summary>\n\n\n\n</details>", ph: "Summary", title: "Collapsible section" },
-    { t: "—", b: "\n---\n", a: "", ph: "", title: "Horizontal rule" }
+    { text: "H1", b: "# ", a: "", ph: "Heading", title: "Heading 1" },
+    { text: "H2", b: "## ", a: "", ph: "Heading", title: "Heading 2" },
+    { text: "H3", b: "### ", a: "", ph: "Heading", title: "Heading 3" },
+    { text: "B", b: "**", a: "**", ph: "bold", title: "Bold" },
+    { text: "I", b: "_", a: "_", ph: "italic", title: "Italic" },
+    { text: "S", b: "~~", a: "~~", ph: "strike", title: "Strikethrough" },
+    { icon: "link", b: "[", a: "](https://)", ph: "link text", title: "Link" },
+    { icon: "image", b: "![", a: "](https://)", ph: "alt text", title: "Image" },
+    { text: "`", b: "`", a: "`", ph: "code", title: "Inline code" },
+    { icon: "braces", b: FENCE + "\n", a: "\n" + FENCE, ph: "code", title: "Code block" },
+    { icon: "listBullet", b: "- ", a: "", ph: "item", title: "Bullet list" },
+    { text: "1.", b: "1. ", a: "", ph: "item", title: "Numbered list" },
+    { icon: "checkSquare", b: "- [ ] ", a: "", ph: "task", title: "Task list" },
+    { icon: "table", b: "\n| Column | Column |\n| --- | --- |\n| Cell | Cell |\n", a: "", ph: "", title: "Table" },
+    { icon: "quote", b: "> ", a: "", ph: "quote", title: "Blockquote" },
+    { icon: "details", b: "<details>\n<summary>", a: "</summary>\n\n\n\n</details>", ph: "Summary", title: "Collapsible section" },
+    { icon: "minus", b: "\n---\n", a: "", ph: "", title: "Horizontal rule" }
   ];
 
   function buildToolbar() {
     var bar = $("#mdToolbar");
     bar.innerHTML = MD_TOOLS.map(function (tool, i) {
-      return '<button class="btn btn-ghost btn-icon" type="button" data-tool="' + i + '" title="' + esc(tool.title) + '">' + tool.t + "</button>";
+      return '<button class="btn btn-ghost btn-icon" type="button" data-tool="' + i + '" title="' + esc(tool.title) + '">' +
+        (tool.icon ? icon(tool.icon) : esc(tool.text)) + "</button>";
     }).join("");
     bar.addEventListener("click", function (e) {
       var btn = e.target.closest("[data-tool]");
-      if (!btn) return;
-      insertTool(MD_TOOLS[parseInt(btn.getAttribute("data-tool"), 10)]);
+      if (btn) insertTool(MD_TOOLS[parseInt(btn.getAttribute("data-tool"), 10)]);
     });
   }
 
@@ -1022,11 +1024,7 @@
     var ta = mdInput;
     var s = ta.selectionStart, en = ta.selectionEnd;
     var sel = ta.value.slice(s, en) || tool.ph || "";
-    var text = tool.b + sel + tool.a;
-    ta.setRangeText(text, s, en, "end");
-    if (!tool.a && tool.b.indexOf("\n") === -1) {
-      // leave cursor at end of inserted text
-    }
+    ta.setRangeText(tool.b + sel + tool.a, s, en, "end");
     ta.focus();
     onMarkdownInput();
   }
@@ -1044,8 +1042,7 @@
       state.mode = "markdown";
     } else {
       if (state.rawDirty && mdInput.value.trim() && mdInput.value !== compile(state.blocks, state.globals)) {
-        var ok = window.confirm("Your raw Markdown differs from the builder blocks.\n\nImport it as a single Custom block? (Cancel keeps your builder blocks.)");
-        if (ok) {
+        if (window.confirm("Your Markdown differs from the builder sections. Replace the sections with a single Custom Markdown section?")) {
           state.blocks = [{ id: uid(), type: "custom", data: { text: mdInput.value.replace(/\s+$/, "") } }];
           renderBlocks();
         }
@@ -1058,17 +1055,14 @@
   }
 
   function syncModeUI() {
-    var isB = state.mode === "builder";
-    $("#tabBuilder").setAttribute("aria-selected", isB ? "true" : "false");
-    $("#tabMarkdown").setAttribute("aria-selected", isB ? "false" : "true");
-    $("#builderPane").hidden = !isB;
-    $("#markdownPane").hidden = isB;
+    var isBuilder = state.mode === "builder";
+    $("#tabBuilder").setAttribute("aria-selected", isBuilder ? "true" : "false");
+    $("#tabMarkdown").setAttribute("aria-selected", isBuilder ? "false" : "true");
+    $("#builderPane").hidden = !isBuilder;
+    $("#markdownPane").hidden = isBuilder;
     updateCounts();
   }
 
-  /* ==========================================================================
-     Modals
-     ========================================================================== */
   function closeModal() {
     var m = $("#modalOverlay");
     if (m) m.remove();
@@ -1083,10 +1077,10 @@
     ov.id = "modalOverlay";
     ov.innerHTML =
       '<div class="modal" role="dialog" aria-modal="true" aria-label="' + esc(title) + '">' +
-        '<div class="modal-head"><h3>' + esc(title) + "</h3>" +
-          '<button class="btn btn-ghost btn-icon" type="button" data-close title="Close">✕</button></div>' +
-        '<div class="modal-body">' + bodyHTML + "</div>" +
-        (footerHTML ? '<div class="modal-foot">' + footerHTML + "</div>" : "") +
+      '<div class="modal-head"><h3>' + esc(title) + "</h3>" +
+      '<button class="btn btn-ghost btn-icon" type="button" data-close title="Close">' + icon("x") + "</button></div>" +
+      '<div class="modal-body">' + bodyHTML + "</div>" +
+      (footerHTML ? '<div class="modal-foot">' + footerHTML + "</div>" : "") +
       "</div>";
     document.body.appendChild(ov);
     ov.addEventListener("click", function (e) {
@@ -1101,24 +1095,24 @@
       var t = TEMPLATES[k];
       return '<button class="tpl-card" type="button" data-tpl="' + k + '"><strong>' + esc(t.label) + "</strong><span>" + esc(t.desc) + "</span></button>";
     }).join("") + "</div>";
-    var ov = openModal("Start from a template", html);
+    var ov = openModal("Templates", html);
     ov.addEventListener("click", function (e) {
       var card = e.target.closest("[data-tpl]");
       if (!card) return;
       var key = card.getAttribute("data-tpl");
-      if (state.blocks.length && !window.confirm("This replaces your current README. Continue?")) return;
+      if (state.blocks.length && !window.confirm("This replaces the current README. Continue?")) return;
       state.blocks = TEMPLATES[key].build(state.globals);
       closeModal(); renderBlocks(); renderPreview(); save();
-      toast("Loaded the " + TEMPLATES[key].label + " template");
+      toast("Template loaded");
     });
   }
 
   function openImport() {
     var html = '<p style="margin-top:0;color:var(--muted);font-size:13.5px">Paste an existing README to edit it here.</p>' +
-      '<textarea id="importArea" rows="12" style="font-family:var(--mono);font-size:12.5px" placeholder="# My Project&#10;&#10;Paste Markdown…"></textarea>';
+      '<textarea id="importArea" rows="12" style="font-family:var(--mono);font-size:12.5px" placeholder="# Project name"></textarea>';
     var foot = '<button class="btn" type="button" data-close>Cancel</button>' +
-      '<button class="btn" type="button" id="importAppend">Append as Custom block</button>' +
-      '<button class="btn btn-primary" type="button" id="importReplace">Replace everything</button>';
+      '<button class="btn" type="button" id="importAppend">Append</button>' +
+      '<button class="btn btn-primary" type="button" id="importReplace">Replace all</button>';
     var ov = openModal("Import Markdown", html, foot);
     ov.addEventListener("click", function (e) {
       var val = ($("#importArea") || {}).value || "";
@@ -1135,28 +1129,23 @@
     });
   }
 
-  /* ==========================================================================
-     Theme
-     ========================================================================== */
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    try { localStorage.setItem("readmeforge.theme", theme); } catch (e) {}
+    var btn = $("#themeToggle");
+    if (btn) btn.innerHTML = icon(theme === "dark" ? "sun" : "moon");
+  }
+
   function initTheme() {
     var saved = null;
     try { saved = localStorage.getItem("readmeforge.theme"); } catch (e) {}
-    var theme = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    applyTheme(theme);
+    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(saved || (dark ? "dark" : "light"));
     $("#themeToggle").addEventListener("click", function () {
       applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
     });
   }
-  function applyTheme(theme) {
-    document.documentElement.setAttribute("data-theme", theme);
-    try { localStorage.setItem("readmeforge.theme", theme); } catch (e) {}
-    var sun = $("#iconSun");
-    if (sun) sun.style.opacity = theme === "dark" ? ".55" : "1";
-  }
 
-  /* ==========================================================================
-     Boot
-     ========================================================================== */
   function init() {
     mdInput = $("#mdInput");
     previewEl = $("#preview");
@@ -1168,11 +1157,8 @@
     bindEditor();
     bindGlobals();
 
-    var restored = load();
-    if (!restored) {
-      state.blocks = TEMPLATES.starter.build(state.globals);
-    }
-    // reflect globals into inputs
+    if (!load()) state.blocks = TEMPLATES.starter.build(state.globals);
+
     $("#gName").value = state.globals.name || "";
     $("#gOwner").value = state.globals.owner || "";
     $("#gRepo").value = state.globals.repo || "";
@@ -1181,22 +1167,18 @@
     syncModeUI();
     renderPreview();
 
-    // library add
     $("#libraryList").addEventListener("click", function (e) {
       var btn = e.target.closest("[data-add]");
-      if (!btn) return;
-      addBlock(btn.getAttribute("data-add"));
+      if (btn) addBlock(btn.getAttribute("data-add"));
     });
 
-    // tabs
     $("#tabBuilder").addEventListener("click", function () { setMode("builder"); });
     $("#tabMarkdown").addEventListener("click", function () { setMode("markdown"); });
 
-    // toolbar buttons
     $("#btnTemplates").addEventListener("click", openTemplates);
     $("#btnImport").addEventListener("click", openImport);
     $("#btnReset").addEventListener("click", function () {
-      if (!window.confirm("Clear everything and start over?")) return;
+      if (!window.confirm("Clear the README and start over?")) return;
       state.blocks = [];
       state.globals = { name: "", owner: "", repo: "" };
       $("#gName").value = $("#gOwner").value = $("#gRepo").value = "";
@@ -1206,38 +1188,32 @@
     });
     $("#btnCopy").addEventListener("click", function () {
       var md = currentMarkdown();
-      if (!md.trim()) { toast("Nothing to copy yet"); return; }
-      copyText(md).then(function () { toast("Markdown copied to clipboard ✓"); });
+      if (!md.trim()) { toast("Nothing to copy"); return; }
+      copyText(md).then(function () { toast("Copied to clipboard"); });
     });
     $("#btnDownload").addEventListener("click", function () {
       var md = currentMarkdown();
-      if (!md.trim()) { toast("Nothing to download yet"); return; }
+      if (!md.trim()) { toast("Nothing to download"); return; }
       download("README.md", md);
-      toast("Downloaded README.md ✓");
+      toast("README.md downloaded");
     });
 
-    // markdown textarea
     mdInput.addEventListener("input", onMarkdownInput);
     mdInput.addEventListener("keydown", function (e) {
-      var meta = e.ctrlKey || e.metaKey;
-      if (!meta) return;
+      if (!(e.ctrlKey || e.metaKey)) return;
       if (e.key === "b") { e.preventDefault(); insertTool(MD_TOOLS[3]); }
       if (e.key === "i") { e.preventDefault(); insertTool(MD_TOOLS[4]); }
       if (e.key === "k") { e.preventDefault(); insertTool(MD_TOOLS[6]); }
     });
 
-    // mobile pane switch
     var grid = $("#appGrid");
     $$(".mobile-panes button").forEach(function (b) {
       b.addEventListener("click", function () {
-        var pane = b.getAttribute("data-pane");
-        grid.setAttribute("data-pane", pane);
+        grid.setAttribute("data-pane", b.getAttribute("data-pane"));
         $$(".mobile-panes button").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
       });
     });
 
-    // warn before leaving with unsaved-looking work is unnecessary (auto-saved),
-    // but surface the keyboard shortcut for download
     document.addEventListener("keydown", function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); $("#btnDownload").click(); }
     });
