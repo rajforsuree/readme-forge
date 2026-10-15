@@ -128,6 +128,12 @@
       case "last-commit": base = "https://img.shields.io/github/last-commit/" + owner + "/" + repo; break;
       case "contributors": base = "https://img.shields.io/github/contributors/" + owner + "/" + repo; break;
       case "repo-size": base = "https://img.shields.io/github/repo-size/" + owner + "/" + repo; break;
+      case "release": base = "https://img.shields.io/github/v/release/" + owner + "/" + repo; break;
+      case "issues-pr": base = "https://img.shields.io/github/issues-pr/" + owner + "/" + repo; break;
+      case "commit-activity": base = "https://img.shields.io/github/commit-activity/m/" + owner + "/" + repo; break;
+      case "code-size": base = "https://img.shields.io/github/languages/code-size/" + owner + "/" + repo; break;
+      case "top-language": base = "https://img.shields.io/github/languages/top/" + owner + "/" + repo; break;
+      case "workflow": base = "https://img.shields.io/github/actions/workflow/status/" + owner + "/" + repo + "/" + (item.pkg || "ci.yml"); break;
       case "npm-version": base = "https://img.shields.io/npm/v/" + pkg; break;
       case "npm-downloads": base = "https://img.shields.io/npm/dm/" + pkg; break;
       case "pypi-version": base = "https://img.shields.io/pypi/v/" + pkg; break;
@@ -790,8 +796,9 @@
       h += '<div class="subhead">' + esc(f.label) + "</div>";
       items.forEach(function (it, i) {
         var t = it.type || "custom";
-        var isRepo = ["stars", "forks", "issues", "license", "last-commit", "contributors", "repo-size"].indexOf(t) > -1;
+        var isRepo = ["stars", "forks", "issues", "license", "last-commit", "contributors", "repo-size", "release", "issues-pr", "commit-activity", "code-size", "top-language", "workflow"].indexOf(t) > -1;
         var isPkg = ["npm-version", "npm-downloads", "pypi-version", "pypi-downloads"].indexOf(t) > -1;
+        var isWorkflow = t === "workflow";
         function sel(k, opts, cls) {
           return '<select data-key="' + f.k + '" data-idx="' + i + '" data-sub="' + k + '"' + (cls ? ' class="' + cls + '"' : "") + ">" +
             opts.map(function (o) {
@@ -807,6 +814,8 @@
         h += '<div class="pair">' + sel("type", [
           ["custom", "Custom label"], ["stars", "GitHub stars"], ["forks", "GitHub forks"], ["issues", "Open issues"],
           ["license", "Licence"], ["last-commit", "Last commit"], ["contributors", "Contributors"], ["repo-size", "Repo size"],
+          ["release", "Latest release"], ["issues-pr", "Open pull requests"], ["commit-activity", "Commit activity"],
+          ["code-size", "Code size"], ["top-language", "Top language"], ["workflow", "Build status"],
           ["npm-version", "npm version"], ["npm-downloads", "npm downloads"], ["pypi-version", "PyPI version"], ["pypi-downloads", "PyPI downloads"]
         ], "grow") + sel("style", [["flat-square", "flat-square"], ["flat", "flat"], ["plastic", "plastic"], ["for-the-badge", "for-the-badge"], ["social", "social"]]) +
           '<button class="btn btn-ghost btn-icon btn-danger" type="button" data-act="pair-del" data-key="' + f.k + '" data-idx="' + i + '" title="Remove">' + icon("x") + "</button></div>";
@@ -816,6 +825,7 @@
           h += '<div class="pair">' + txt("logo", "logo, e.g. react", "grow") + txt("logoColor", "logo colour", "grow") + "</div>";
         } else if (isRepo) {
           h += '<div class="pair">' + txt("owner", "owner", "grow") + txt("repo", "repo", "grow") + "</div>";
+          if (isWorkflow) h += '<div class="pair">' + txt("pkg", "workflow file, e.g. ci.yml", "grow") + "</div>";
         } else if (isPkg) {
           h += '<div class="pair">' + txt("pkg", "package name", "grow") + "</div>";
         }
@@ -1155,6 +1165,8 @@
     var isBuilder = state.mode === "builder";
     $("#tabBuilder").setAttribute("aria-selected", isBuilder ? "true" : "false");
     $("#tabMarkdown").setAttribute("aria-selected", isBuilder ? "false" : "true");
+    $("#tabBuilder").setAttribute("tabindex", isBuilder ? "0" : "-1");
+    $("#tabMarkdown").setAttribute("tabindex", isBuilder ? "-1" : "0");
     $("#builderPane").hidden = !isBuilder;
     $("#markdownPane").hidden = isBuilder;
     updateCounts();
@@ -1271,22 +1283,29 @@
     if (btn) btn.innerHTML = icon(theme === "dark" ? "sun" : "moon");
   }
 
+  var themeLocked = false;
+
   function initTheme() {
     var saved = null;
     try { saved = localStorage.getItem("readmeforge.theme"); } catch (e) {}
-    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    applyTheme(saved || (dark ? "dark" : "light"));
-    $("#themeToggle").addEventListener("click", function () {
+    themeLocked = !!saved;
+    var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    applyTheme(saved || (mq && mq.matches ? "dark" : "light"));
+    var toggle = $("#themeToggle");
+    if (toggle) toggle.addEventListener("click", function () {
+      themeLocked = true;
       applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
     });
+    if (!mq) return;
+    var onChange = function (e) { if (!themeLocked) applyTheme(e.matches ? "dark" : "light"); };
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else if (mq.addListener) mq.addListener(onChange);
   }
 
   function init() {
     mdInput = $("#mdInput");
     previewEl = $("#preview");
-    $("#year").textContent = new Date().getFullYear();
 
-    initTheme();
     renderLibrary();
     buildToolbar();
     bindEditor();
@@ -1315,6 +1334,18 @@
 
     $("#tabBuilder").addEventListener("click", function () { setMode("builder"); });
     $("#tabMarkdown").addEventListener("click", function () { setMode("markdown"); });
+
+    var tabList = [$("#tabBuilder"), $("#tabMarkdown")];
+    tabList.forEach(function (tab, i) {
+      tab.addEventListener("keydown", function (e) {
+        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        e.preventDefault();
+        var step = e.key === "ArrowRight" ? 1 : -1;
+        var next = tabList[(i + step + tabList.length) % tabList.length];
+        next.focus();
+        setMode(next === $("#tabMarkdown") ? "markdown" : "builder");
+      });
+    });
 
     $("#btnTemplates").addEventListener("click", openTemplates);
     $("#btnImport").addEventListener("click", openImport);
@@ -1382,6 +1413,13 @@
     }
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
+  function ready() {
+    initTheme();
+    var yearEl = $("#year");
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+    if ($("#blocks")) init();
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready);
+  else ready();
 })();

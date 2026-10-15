@@ -1,8 +1,9 @@
-var CACHE = "readme-forge-v1";
+var CACHE = "readme-forge-v2";
 
 var PRECACHE = [
   "./",
   "./index.html",
+  "./guide.html",
   "./manifest.webmanifest",
   "./assets/css/style.css",
   "./assets/js/app.js",

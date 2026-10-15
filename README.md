@@ -31,7 +31,8 @@ Add sections, build badges, check the live preview and export a README. Everythi
 - Six templates: Starter, Minimal, Library, API, Profile and Awesome list.
 - Raw Markdown editor with a formatting toolbar.
 - Copy to clipboard or download as README.md. Drafts are saved in local storage.
-- Dark mode, keyboard shortcuts and a responsive layout.
+- Dark mode that follows your system setting, keyboard shortcuts and a responsive layout.
+- A written [guide to writing a README](guide.html), linked from the footer.
 - Works offline after the first visit, and can be installed as a web app.
 
 ## Quick start
@@ -51,6 +52,7 @@ Then open `http://localhost:8080`.
 | File | Purpose |
 | --- | --- |
 | `index.html` | Page structure and metadata |
+| `guide.html` | Guide to writing a README |
 | `assets/css/style.css` | Layout, theming and dark mode |
 | `assets/js/app.js` | Section registry, Markdown compiler, editor and preview |
 | `assets/js/marked.min.js` | Markdown to HTML |
