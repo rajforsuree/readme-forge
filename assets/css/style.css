@@ -186,7 +186,7 @@ p { margin: 0 0 1em; }
 .field { margin-bottom: 10px; }
 .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
 
-input[type="text"], input[type="url"], input[type="color"], textarea, select {
+input[type="text"], input[type="url"], input[type="search"], input[type="color"], textarea, select {
   width: 100%; padding: 8px 10px; font: inherit; font-size: 13.5px;
   color: var(--text); background: var(--bg);
   border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -351,6 +351,24 @@ input[type="color"] { padding: 2px; height: 34px; cursor: pointer; }
 .badge-row .pair { margin-bottom: 6px; }
 .badge-row .pair:last-child { margin-bottom: 0; }
 .badge-row input[type="color"] { flex: none; width: 44px; }
+
+.lib-search { padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--bg-soft); }
+.lib-empty { padding: 22px 12px; font-size: 13px; color: var(--muted); text-align: center; }
+
+.shortcut-list { display: grid; gap: 12px; }
+.shortcut-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 13.5px; }
+.shortcut-row .keys { display: flex; gap: 6px; flex: none; }
+kbd {
+  font-family: var(--mono); font-size: 11.5px; line-height: 1;
+  padding: 4px 7px; border: 1px solid var(--border); border-bottom-width: 2px;
+  border-radius: 6px; background: var(--bg-soft); color: var(--text-soft);
+}
+
+.noscript {
+  max-width: 720px; margin: 16px auto; padding: 15px 18px;
+  border: 1px solid var(--border); border-left: 4px solid var(--accent);
+  border-radius: var(--radius-sm); background: var(--bg-soft); font-size: 14px;
+}
 
 .mobile-panes { display: none; }
 

@@ -21,15 +21,18 @@ Add sections, build badges, check the live preview and export a README. Everythi
 
 ## Features
 
-- Section blocks for title, badges, description, features, installation, usage, screenshots, tech stack, project structure, table of contents, contributing, roadmap, FAQ, acknowledgements, support and social links.
-- Drag to reorder sections. Duplicate or delete them at any time.
+- 22 section blocks: title, badges, description, features, installation, usage, screenshots, table, tech stack, project structure, table of contents, contributing, roadmap, FAQ, acknowledgements, support and social links.
+- Drag to reorder sections, or use the arrow buttons. Duplicate or delete them at any time.
+- Undo and redo, with Ctrl+Z and Ctrl+Shift+Z.
+- Search the section list to find a block quickly.
 - Badge builder for shields.io badges: stars, forks, licence, last commit, npm and PyPI versions, or a custom label.
 - Live preview using GitHub-flavoured Markdown, including tables, task lists and aligned images.
 - GitHub profile mode with stats, streak, top languages, trophies and an activity graph.
 - Six templates: Starter, Minimal, Library, API, Profile and Awesome list.
 - Raw Markdown editor with a formatting toolbar.
 - Copy to clipboard or download as README.md. Drafts are saved in local storage.
-- Dark mode and a responsive layout.
+- Dark mode, keyboard shortcuts and a responsive layout.
+- Works offline after the first visit, and can be installed as a web app.
 
 ## Quick start
 
@@ -53,6 +56,7 @@ Then open `http://localhost:8080`.
 | `assets/js/marked.min.js` | Markdown to HTML |
 | `assets/js/purify.min.js` | HTML sanitising |
 | `assets/img/` | Logo, icons and social preview image |
+| `sw.js` | Service worker for offline use |
 | `sitemap.xml`, `robots.txt` | Search engine files |
 | `manifest.webmanifest` | Installable web app metadata |
 

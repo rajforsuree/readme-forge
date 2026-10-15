@@ -86,6 +86,18 @@
           "acceptedAnswer": { "@type": "Answer", "text": "Download README.md, then upload it to the root of your repository and commit." }
         }
       ]
+    },
+    {
+      "@type": "HowTo",
+      "@id": "https://rajforsuree.github.io/readme-forge/#howto",
+      "name": "How to generate a README.md for GitHub",
+      "totalTime": "PT5M",
+      "step": [
+        { "@type": "HowToStep", "name": "Choose a template", "text": "Pick a template or start with an empty README in the Builder tab." },
+        { "@type": "HowToStep", "name": "Add sections", "text": "Add the sections you need from the list on the left." },
+        { "@type": "HowToStep", "name": "Fill in the fields", "text": "Fill in the fields and check the live preview." },
+        { "@type": "HowToStep", "name": "Export the file", "text": "Copy the Markdown or download it as README.md, then add it to your repository." }
+      ]
     }
   ]
 }
@@ -93,6 +105,10 @@
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
+
+<noscript>
+  <p class="noscript">ReadmeForge needs JavaScript to build the README and show the preview. Please enable JavaScript and reload the page.</p>
+</noscript>
 
 <header class="site-header">
   <a class="brand" href="./" aria-label="ReadmeForge home">
@@ -121,11 +137,11 @@
   <section class="app" aria-label="README generator">
     <div class="app-toolbar">
       <div class="segmented" role="tablist" aria-label="Editor mode">
-        <button type="button" role="tab" id="tabBuilder" aria-selected="true" data-mode="builder">
+        <button type="button" role="tab" id="tabBuilder" aria-selected="true" aria-controls="builderPane" data-mode="builder">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
           Builder
         </button>
-        <button type="button" role="tab" id="tabMarkdown" aria-selected="false" data-mode="markdown">
+        <button type="button" role="tab" id="tabMarkdown" aria-selected="false" aria-controls="markdownPane" data-mode="markdown">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
           Markdown
         </button>
@@ -139,6 +155,9 @@
 
       <div class="toolbar-spacer"></div>
 
+      <button class="btn btn-ghost btn-icon" id="btnShortcuts" type="button" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+      </button>
       <button class="btn" id="btnTemplates" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         Templates
@@ -179,6 +198,9 @@
               <input type="text" id="gRepo" placeholder="repository" autocomplete="off" />
             </div>
           </div>
+          <div class="lib-search">
+            <input type="search" id="libSearch" placeholder="Search sections" aria-label="Search sections" autocomplete="off" />
+          </div>
           <div id="libraryList"></div>
         </div>
       </aside>
@@ -186,10 +208,10 @@
       <div class="panel editor" aria-label="Editor">
         <div class="panel-head">Editor <span class="count" id="editorCount"></span></div>
         <div class="panel-body">
-          <div id="builderPane">
+          <div id="builderPane" role="tabpanel" aria-labelledby="tabBuilder">
             <div class="blocks" id="blocks"></div>
           </div>
-          <div id="markdownPane" hidden class="editor-wrap">
+          <div id="markdownPane" role="tabpanel" aria-labelledby="tabMarkdown" hidden class="editor-wrap">
             <div class="md-toolbar" id="mdToolbar"></div>
             <textarea class="md-textarea" id="mdInput" spellcheck="false" aria-label="Markdown source" placeholder="# Project name"></textarea>
           </div>
