@@ -1,0 +1,12 @@
+# robots.txt for ReadmeForge
+User-agent: *
+Allow: /
+
+# Explicitly welcome the major crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://rajforsuree.github.io/readme-forge/sitemap.xml
